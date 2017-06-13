@@ -3,20 +3,43 @@
  */
 var out;
 function init () {
-	for ( var n = 0; n < data.length; n++) {
-		var placing = n + 1;
-		out = out +
-			+ "<div class='card'>"
-			+ "<span>"
-			+ placing
-			+ "</span>"
-			+ "<span id='userName' class='userName'>"
-			// data
-			+ "</span>"
-			+ "<span id='userScore' class='userScore'>"
-			// data
-			+ "</span>"
-			+ "</div>"
+	var place = 1;
+
+	function sortByScore ( a, b ) {
+		var aScore = parseInt( a.score );
+		var bScore = parseInt( b.score );
+		return ((aScore > bScore) ? -1 : ((aScore < bScore) ? 1 : 0));
 	}
-	document.getElementById( "display" ).innerHTML = out;
+
+	function addElement ( data ) {
+		var elStr = "<div class='score'>" +
+			"<div class='flex'>" +
+			"<span class='pos'>" + place + ".</span>" +
+			"<img src='" + data.avatar + "' class='profile-img'>" +
+			"<span class='user-name'>" + data.name + "</span>" +
+			"</div>" +
+			"<span class='user-score'>" + data.score + "</span>" +
+			"</div>";
+		$( "#list_wrapper" ).append( elStr );
+		place++;
+	}
+
+	$.ajax( {
+		type: "GET",
+		url: "http://localhost:7979/users/",
+		contentType: "application/json"
+	} ).done( function ( data ) {
+		// console.log( "success", data );
+		data.sort( sortByScore );
+		console.log( data );
+		data.forEach( function ( d ) {
+			addElement( d );
+		} );
+	} ).fail( function ( err ) {
+		console.log( "error", err );
+
+	} ).complete( function () {
+		console.log( "complete" );
+	} );
+
 }

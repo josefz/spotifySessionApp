@@ -1,3 +1,6 @@
+var user = {};
+
+
 function getUrlVars () {
 	var vars = [], hash;
 	var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
@@ -11,6 +14,7 @@ function getUrlVars () {
 
 function updateKpi ( value ) {
 	value = Math.round( value );
+	user.score = value;
 	$( ".mainstream-value" ).text( value );
 	$( ".bar" ).css( "height", "calc(" + value + "% - 2px)" );
 
@@ -43,9 +47,11 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 		return;
 	}
 	if ( data.user ) {
-		$( "#user-name" ).text( data.user.display_name || data.user.id );
+		user.name = data.user.display_name || data.user.id;
+		$( "#user-name" ).text( user.name );
 		if ( data.user.images.length !== 0 && data.user.images[0].url ) {
-			$( ".profile-img" ).attr( "src", data.user.images[0].url );
+			user.avatar = data.user.images[0].url;
+			$( ".profile-img" ).attr( "src", user.avatar );
 		}
 	}
 	var sessionApp;
@@ -57,8 +63,9 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 			type: "POST",
 			url: "http://localhost:7979/users/add",
 			data: JSON.stringify( {
-				"name": "gaga",
-				"xxx": "gugu"
+				"name": user.name,
+				"avatar": (user.avatar) ? user.avatar : "",
+				"score": user.score
 			} ),
 			contentType: "application/json"
 		} ).done( function ( data ) {
@@ -72,7 +79,7 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 				$( ".toaster" ).removeClass( 'show' );
 			}, 4000 );
 		} );
-
+	} );
 	$( ".high-score" ).click( function () {
 		window.open('highscore/highscore.html');
 	} );
@@ -153,13 +160,32 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 				}], {} ).then( function( table ) {
 					table.show( "QV01" );
 				} );
-				sessionApp.visualization.create( "kpi", [{
-					"qDef": {
-						qDef: "=Avg(popularity)"
-					}
-				}], {} ).then( function ( reply ) {
-					updateKpi( reply.model.layout.qHyperCube.qDataPages[0].qMatrix[0][0].qNum );
-					$(".spin").remove();
+
+				function getAvgPopularity () {
+					sessionApp.createGenericObject( {
+						avg: {
+							qStringExpression: "=Avg(popularity)"
+						}
+					}, function ( reply ) {
+						updateKpi( reply.avg );
+						$( ".spin" ).remove();
+						//untested test && uncomment (if this works)
+						// sessionApp.destroySessionObject( reply.qInfo.id );
+					} );
+				}
+
+				getAvgPopularity();
+
+				// sessionApp.visualization.create( "kpi", [{
+				// 	"qDef": {
+				// 		qDef: "=Avg(popularity)"
+				// 	}
+				// }], {} ).then( function ( reply ) {
+				// 	updateKpi( reply.model.layout.qHyperCube.qDataPages[0].qMatrix[0][0].qNum );
+				// 	$(".spin").remove();
+				// } );
+				sessionApp.getList( "SelectionObject", function ( reply ) {
+					getAvgPopularity();
 				} );
 
 				sessionApp.visualization.create('linechart',
@@ -324,7 +350,7 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 			}
 			window.location = "/";
 			return;
-		} )
+		} );
 
 	} );
 } );
