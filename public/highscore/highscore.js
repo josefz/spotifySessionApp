@@ -26,7 +26,7 @@ function init () {
 
 	$.ajax( {
 		type: "GET",
-		url: "http://localhost:7979/users/",
+		url: "http://" + location.hostname + ":7979/users/",
 		contentType: "application/json"
 	} ).done( function ( data ) {
 		// console.log( "success", data );
