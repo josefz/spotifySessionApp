@@ -1,3 +1,6 @@
+var user = {};
+
+
 function getUrlVars () {
 	var vars = [], hash;
 	var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
@@ -11,6 +14,7 @@ function getUrlVars () {
 
 function updateKpi ( value ) {
 	value = Math.round( value );
+	user.score = value;
 	$( ".mainstream-value" ).text( value );
 	$( ".bar" ).css( "height", "calc(" + value + "% - 2px)" );
 
@@ -36,27 +40,45 @@ function updateKpi ( value ) {
 }
 
 //Turn it to false if running all local with Qlik Sense Desktop
-runDesktop = true;
+runDesktop = false;
 $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 	if ( data.redirect ) {
 		window.location = "/";
 		return;
 	}
 	if ( data.user ) {
-		$( "#user-name" ).text( data.user.display_name );
-		if ( data.user.images[0].url ) {
-			$( ".profile-img" ).attr( "src", data.user.images[0].url );
+		user.name = data.user.display_name || data.user.id;
+		$( "#user-name" ).text( user.name );
+		if ( data.user.images.length !== 0 && data.user.images[0].url ) {
+			user.avatar = data.user.images[0].url;
+			$( ".profile-img" ).attr( "src", user.avatar );
 		}
 	}
 	var sessionApp;
 
 	$( ".send-score" ).click( function () {
-		$( '.toaster' ).fadeIn( 1000 );
-		setTimeout( function () {
-			$( '.toaster' ).fadeOut( 1000 );
-		}, 4000 );
+		$( ".toaster" ).fadeIn(4000);
+		$.ajax( {
+			type: "POST",
+			url: "http://localhost:7979/users/add",
+			data: JSON.stringify( {
+				"name": user.name,
+				"avatar": (user.avatar) ? user.avatar : "",
+				"score": user.score
+			} ),
+			contentType: "application/json"
+		} ).done( function ( data ) {
+			console.log( "success", data );
+			$( ".toaster" ).html( data.responseJSON.message );
+		} ).fail( function ( err ) {
+			console.log( "error", err );
+			$( ".toaster" ).html( err.responseJSON.message );
+		} ).complete( function () {
+			setTimeout( function () {
+				$( ".toaster" ).fadeOut(4000);
+			}, 4000 );
+		} );
 	} );
-
 	$( ".high-score" ).click( function () {
 		window.open('highscore/highscore.html');
 	} );
@@ -68,7 +90,6 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 	var config;
 	if ( runDesktop ) {
 		config = {
-
 			host: 'localhost',
 			prefix: '/',
 			port: 4848,
@@ -110,7 +131,6 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 					alert( "Spotify API has a rate limit, error could related (or not :-) ) : " + JSON.stringify( data ) );
 					return;
 				}
-				var allOb = [];
 
 				sessionApp = qlik.sessionAppFromApp( "engineData", config );
 				sessionApp.getAppLayout( function ( layout ) {
@@ -138,13 +158,32 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 				}], {} ).then( function( table ) {
 					table.show( "QV01" );
 				} );
-				sessionApp.visualization.create( "kpi", [{
-					"qDef": {
-						qDef: "=Avg(popularity)"
-					}
-				}], {} ).then( function ( reply ) {
-					updateKpi( reply.model.layout.qHyperCube.qDataPages[0].qMatrix[0][0].qNum );
-					$(".spin").remove();
+
+				function getAvgPopularity () {
+					sessionApp.createGenericObject( {
+						avg: {
+							qStringExpression: "=Avg(popularity)"
+						}
+					}, function ( reply ) {
+						updateKpi( reply.avg );
+						$( ".spin" ).remove();
+						//untested test && uncomment (if this works)
+						// sessionApp.destroySessionObject( reply.qInfo.id );
+					} );
+				}
+
+				getAvgPopularity();
+
+				// sessionApp.visualization.create( "kpi", [{
+				// 	"qDef": {
+				// 		qDef: "=Avg(popularity)"
+				// 	}
+				// }], {} ).then( function ( reply ) {
+				// 	updateKpi( reply.model.layout.qHyperCube.qDataPages[0].qMatrix[0][0].qNum );
+				// 	$(".spin").remove();
+				// } );
+				sessionApp.getList( "SelectionObject", function ( reply ) {
+					getAvgPopularity();
 				} );
 
 				sessionApp.visualization.create('linechart',
@@ -165,116 +204,6 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 					table.show( "QV02" );
 				} );
 
-				// allOb.push(sessionApp.visualization.create("table", [{
-				//     "qDef": {
-				//         qFieldDefs: ["playName"],
-				//         qFallbackTitle: "Playlist"
-				//     }
-				// }], {}).then((table)=> {
-				//     table.show("QV01");
-				// }))
-				//
-				// allOb.push(sessionApp.visualization.create("table", [{
-				//     "qDef": {
-				//         qFieldDefs: ["genre"],
-				//         qFallbackTitle: "Genre"
-				//     }
-				// }], {}).then((table)=> {
-				//     table.show("QV02");
-				// }));
-				// allOb.push(sessionApp.visualization.create("kpi", [{
-				//     "qDef": {
-				//         qDef: "=FirstSortedValue(distinct artistName,-Aggr(count(trackName),artistName,playName,genre))",
-				//         qFallbackTitle: 'Your Prefered Artist',
-				//         fontSize: "S",
-				//         textAlign: "right"
-				//     }
-				// }], {}).then((table)=> {
-				//     table.show("QV03");
-				// }));
-				// allOb.push(sessionApp.visualization.create("kpi", [{
-				//     "qDef": {
-				//         qDef: "=Count(trackName)",
-				//         qFallbackTitle: 'Total Tracks'
-				//     }, fontSize: "S", textAlign: "right"
-				// }], {}).then((table)=> {
-				//     table.show("QV03b");
-				// }));
-				// allOb.push(sessionApp.visualization.create('linechart',
-				//     ["artistName", {"qDef": {qDef: "=Avg(popularity)", qFallbackTitle: 'Avg Popularity'}}],
-				//     {
-				//         "title": "Artists popularity",
-				//         "dataPoint": {
-				//             "show": true,
-				//             "showLabels": true
-				//         },
-				//         "color": {
-				//             "auto": false,
-				//             "paletteColor": {
-				//                 "index": 2
-				//             }
-				//         }
-				//     }
-				// )
-				//     .then((table) => {
-				//         table.show("QV02");
-				//     }));
-				// allOb.push(sessionApp.visualization.create(
-				//     "barchart", [{
-				//         "qDef": {
-				//             qFieldDefs: ["artistName"],
-				//             qFallbackTitle: "Artist"
-				//         }
-				//     }, {"qDef": {qDef: "Count( distinct trackName)", qFallbackTitle: '# of Tracks'}}],
-				//     {
-				//         "color": {
-				//             "auto": false,
-				//             "paletteColor": {
-				//                 "index": 2
-				//             }
-				//         }
-				//     }
-				// )
-				//     .then((table) => {
-				//         table.show("QV05");
-				//     }));
-
-				// allOb.push(sessionApp.visualization.create(
-				//     "table", [{
-				//         qDef: {
-				//             qFieldDefs: ["artistName"],
-				//             qFallbackTitle: "Artist"
-				//         }
-				//     },
-				//         {
-				//             qDef: {
-				//                 qFieldDefs: ["trackName"],
-				//                 qFallbackTitle: "Track"
-				//             }
-				//         }
-				//         ,
-				//         {
-				//             qDef: {
-				//                 qFieldDefs: ["url"],
-				//                 qFallbackTitle: "",
-				//                 representation: {type: "url", urlLabel: "OPEN"}
-				//             }
-				//         }],
-				//     {
-				//         "title": {qStringExpression: {qExpr: "='Tracks for selected playlist (' & Count(distinct playName) & ')'"}}
-				//     }
-				// )
-				//     .then((table)=> {
-				//         table.show("QV06");
-				//     }));
-				// Promise.all(allOb).then(()=> {
-				//     $(".spin").remove();
-				//     $(".content").css('overflow', 'auto');
-				//     $(".loaded").animate({
-				//         opacity: 1
-				//     }, 2000, function () {
-				//     });
-				// })
 			} ).fail( function ( e ) {
 				alert( JSON.stringify( e ) );
 			} )
@@ -309,7 +238,7 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 			}
 			window.location = "/";
 			return;
-		} )
+		} );
 
 	} );
 } );
