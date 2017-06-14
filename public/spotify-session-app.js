@@ -51,11 +51,9 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 	var sessionApp;
 
 	$( ".send-score" ).click( function () {
-		$( ".toaster" ).addClass( 'show' );
 		$( '.toaster' ).fadeIn( 1000 );
 		setTimeout( function () {
 			$( '.toaster' ).fadeOut( 1000 );
-			setTimeout( function () { $( ".toaster" ).removeClass( 'show' ); }, 1000 );
 		}, 4000 );
 	} );
 
