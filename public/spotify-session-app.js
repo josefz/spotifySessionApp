@@ -63,7 +63,7 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 			url: "http://" + location.hostname + ":7979/users/add",
 			data: JSON.stringify( {
 				"name": user.name,
-				"avatar": (user.avatar) ? user.avatar : "",
+				"avatar": (user.avatar) ? user.avatar : "images/profile.png",
 				"score": user.score
 			} ),
 			contentType: "application/json"
