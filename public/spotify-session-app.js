@@ -60,7 +60,7 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 		$( ".toaster" ).fadeIn(4000);
 		$.ajax( {
 			type: "POST",
-			url: "http://" + location.hostname + ":7979/users/add",
+			url: "http://" + location.hostname + ":7979/users/add?replace",
 			data: JSON.stringify( {
 				"name": user.name,
 				"avatar": (user.avatar) ? user.avatar : "images/profile.png",
