@@ -206,7 +206,7 @@ body {
 
 .toaster {
 	position: absolute;
-	bottom: 0;
+	bottom: 37px;
 	display: none;
 	width: calc(100% - 10px);
 	height: 35px;
@@ -219,10 +219,7 @@ body {
 	border-radius: 5px;
 	font-size: 16px;
 	max-width: 360px;
-}
-
-.toaster.show {
-	display: inline;
+	z-index: 3;
 }
 
 .spin {

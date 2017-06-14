@@ -57,8 +57,7 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 	var sessionApp;
 
 	$( ".send-score" ).click( function () {
-		$( ".toaster" ).addClass( 'show' );
-
+		$( ".toaster" ).fadeIn(4000);
 		$.ajax( {
 			type: "POST",
 			url: "http://localhost:7979/users/add",
@@ -76,7 +75,7 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 			$( ".toaster" ).html( err.responseJSON.message );
 		} ).complete( function () {
 			setTimeout( function () {
-				$( ".toaster" ).removeClass( 'show' );
+				$( ".toaster" ).fadeOut(4000);
 			}, 4000 );
 		} );
 	} );
@@ -132,7 +131,6 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 					alert( "Spotify API has a rate limit, error could related (or not :-) ) : " + JSON.stringify( data ) );
 					return;
 				}
-				var allOb = [];
 
 				sessionApp = qlik.sessionAppFromApp( "engineData", config );
 				sessionApp.getAppLayout( function ( layout ) {
@@ -206,116 +204,6 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 					table.show( "QV02" );
 				} );
 
-				// allOb.push(sessionApp.visualization.create("table", [{
-				//     "qDef": {
-				//         qFieldDefs: ["playName"],
-				//         qFallbackTitle: "Playlist"
-				//     }
-				// }], {}).then((table)=> {
-				//     table.show("QV01");
-				// }))
-				//
-				// allOb.push(sessionApp.visualization.create("table", [{
-				//     "qDef": {
-				//         qFieldDefs: ["genre"],
-				//         qFallbackTitle: "Genre"
-				//     }
-				// }], {}).then((table)=> {
-				//     table.show("QV02");
-				// }));
-				// allOb.push(sessionApp.visualization.create("kpi", [{
-				//     "qDef": {
-				//         qDef: "=FirstSortedValue(distinct artistName,-Aggr(count(trackName),artistName,playName,genre))",
-				//         qFallbackTitle: 'Your Prefered Artist',
-				//         fontSize: "S",
-				//         textAlign: "right"
-				//     }
-				// }], {}).then((table)=> {
-				//     table.show("QV03");
-				// }));
-				// allOb.push(sessionApp.visualization.create("kpi", [{
-				//     "qDef": {
-				//         qDef: "=Count(trackName)",
-				//         qFallbackTitle: 'Total Tracks'
-				//     }, fontSize: "S", textAlign: "right"
-				// }], {}).then((table)=> {
-				//     table.show("QV03b");
-				// }));
-				// allOb.push(sessionApp.visualization.create('linechart',
-				//     ["artistName", {"qDef": {qDef: "=Avg(popularity)", qFallbackTitle: 'Avg Popularity'}}],
-				//     {
-				//         "title": "Artists popularity",
-				//         "dataPoint": {
-				//             "show": true,
-				//             "showLabels": true
-				//         },
-				//         "color": {
-				//             "auto": false,
-				//             "paletteColor": {
-				//                 "index": 2
-				//             }
-				//         }
-				//     }
-				// )
-				//     .then((table) => {
-				//         table.show("QV02");
-				//     }));
-				// allOb.push(sessionApp.visualization.create(
-				//     "barchart", [{
-				//         "qDef": {
-				//             qFieldDefs: ["artistName"],
-				//             qFallbackTitle: "Artist"
-				//         }
-				//     }, {"qDef": {qDef: "Count( distinct trackName)", qFallbackTitle: '# of Tracks'}}],
-				//     {
-				//         "color": {
-				//             "auto": false,
-				//             "paletteColor": {
-				//                 "index": 2
-				//             }
-				//         }
-				//     }
-				// )
-				//     .then((table) => {
-				//         table.show("QV05");
-				//     }));
-
-				// allOb.push(sessionApp.visualization.create(
-				//     "table", [{
-				//         qDef: {
-				//             qFieldDefs: ["artistName"],
-				//             qFallbackTitle: "Artist"
-				//         }
-				//     },
-				//         {
-				//             qDef: {
-				//                 qFieldDefs: ["trackName"],
-				//                 qFallbackTitle: "Track"
-				//             }
-				//         }
-				//         ,
-				//         {
-				//             qDef: {
-				//                 qFieldDefs: ["url"],
-				//                 qFallbackTitle: "",
-				//                 representation: {type: "url", urlLabel: "OPEN"}
-				//             }
-				//         }],
-				//     {
-				//         "title": {qStringExpression: {qExpr: "='Tracks for selected playlist (' & Count(distinct playName) & ')'"}}
-				//     }
-				// )
-				//     .then((table)=> {
-				//         table.show("QV06");
-				//     }));
-				// Promise.all(allOb).then(()=> {
-				//     $(".spin").remove();
-				//     $(".content").css('overflow', 'auto');
-				//     $(".loaded").animate({
-				//         opacity: 1
-				//     }, 2000, function () {
-				//     });
-				// })
 			} ).fail( function ( e ) {
 				alert( JSON.stringify( e ) );
 			} )
