@@ -57,7 +57,6 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 	var sessionApp;
 
 	$( ".send-score" ).click( function () {
-		$( ".toaster" ).fadeIn(4000);
 		$.ajax( {
 			type: "POST",
 			url: "http://" + location.hostname + ":7979/users/add?replace",
@@ -69,13 +68,15 @@ $.post( 'main', {auth: true, code: getUrlVars().code}, function ( data ) {
 			contentType: "application/json"
 		} ).done( function ( data ) {
 			console.log( "success", data );
-			$( ".toaster" ).html( data.responseJSON.message );
+			$( ".toaster" ).html( "Your score is sent to the high score" );
+			$( ".toaster" ).fadeIn(800);
 		} ).fail( function ( err ) {
 			console.log( "error", err );
-			$( ".toaster" ).html( err.responseJSON.message );
+			$( ".toaster" ).html( err.statusText );
+			$( ".toaster" ).fadeIn(800);
 		} ).complete( function () {
 			setTimeout( function () {
-				$( ".toaster" ).fadeOut(4000);
+				$( ".toaster" ).fadeOut(1000);
 			}, 4000 );
 		} );
 	} );
